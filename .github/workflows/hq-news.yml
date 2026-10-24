@@ -1,0 +1,30 @@
+name: HQ News
+
+on:
+  schedule:
+    - cron: '30 21 * * *'   # 05:30 Bali time (UTC+8); GitHub can start a little late
+  workflow_dispatch:
+
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.26"
+      - run: uv sync
+      - name: Use HQ config
+        run: cp data/config.hq.json data/config.json
+      - name: Run Horizon and send to Fikri HQ
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          HQ_NEWS_TOKEN: ${{ secrets.HQ_NEWS_TOKEN }}
+          HQ_SUPABASE_URL: https://nkopajnglwkjbouyminq.supabase.co
+          HQ_SUPABASE_ANON: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rb3Bham5nbHdramJvdXltaW5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MjU1OTksImV4cCI6MjEwODQwMTU5OX0.ZX9dbqPB0GT0wOZn0NAOY63k8VnERpXCRYYI7utynZY
+          HQ_MAX_PER_FEED: "8"
+        run: uv run horizon --hours 24

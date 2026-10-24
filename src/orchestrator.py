@@ -1,5 +1,6 @@
 """Main orchestrator coordinating the entire workflow."""
 
+import os
 import asyncio
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -288,6 +289,13 @@ class HorizonOrchestrator:
                     f"→ {len(merged_items)} unique items\n"
                 )
 
+            # 3b. Fikri HQ: cap items per feed to stay inside free AI quotas
+            if os.environ.get("HQ_MAX_PER_FEED"):
+                from .services.hq_export import cap_per_source
+                before = len(merged_items)
+                merged_items = cap_per_source(merged_items)
+                self.console.print(f"Capped to {len(merged_items)} of {before} items (HQ_MAX_PER_FEED)\n")
+
             # 4. Analyze with AI
             analyzed_items = await self.analyze_items(merged_items)
             self.console.print(
@@ -311,6 +319,12 @@ class HorizonOrchestrator:
 
             # 6. Search related stories + enrich with background knowledge (2nd AI pass)
             await self.enrich_items(important_items)
+
+            # 6b. Fikri HQ: send selected items to the Physis News tab
+            if os.environ.get("HQ_NEWS_TOKEN"):
+                from .services.hq_export import export_to_hq
+                sent = await export_to_hq(important_items)
+                self.console.print(f"Sent {sent} items to Fikri HQ\n")
 
             # 7. Generate and save daily summaries for each configured language
             today = datetime.now(timezone.utc).strftime("%Y-%m-%d")

@@ -1,0 +1,137 @@
+{
+  "ai": {
+    "provider": "gemini",
+    "model": "gemini-3.5-flash-lite",
+    "api_key_env": "GOOGLE_API_KEY",
+    "temperature": 0.3,
+    "max_tokens": 4096,
+    "throttle_sec": 4,
+    "languages": [
+      "en"
+    ],
+    "analysis_concurrency": 1,
+    "enrichment_concurrency": 1
+  },
+  "processing": {
+    "profiles_dir": "profiles",
+    "default_profile": "hq-world",
+    "profile_settings": {
+      "hq-world": {
+        "threshold": 6.5,
+        "topic_dedup": true
+      },
+      "hq-economy": {
+        "threshold": 6.5,
+        "topic_dedup": true
+      },
+      "hq-tech": {
+        "threshold": 6.5,
+        "topic_dedup": true
+      }
+    }
+  },
+  "sources": {
+    "hackernews": {
+      "enabled": true,
+      "fetch_top_stories": 15,
+      "min_score": 250,
+      "category": "tech",
+      "profile": "hq-tech"
+    },
+    "rss": [
+      {
+        "name": "BBC World",
+        "url": "http://feeds.bbci.co.uk/news/world/rss.xml",
+        "enabled": true,
+        "category": "world",
+        "profile": "hq-world"
+      },
+      {
+        "name": "Al Jazeera",
+        "url": "https://www.aljazeera.com/xml/rss/all.xml",
+        "enabled": true,
+        "category": "world",
+        "profile": "hq-world"
+      },
+      {
+        "name": "The Guardian World",
+        "url": "https://www.theguardian.com/world/rss",
+        "enabled": true,
+        "category": "world",
+        "profile": "hq-world"
+      },
+      {
+        "name": "BBC Business",
+        "url": "http://feeds.bbci.co.uk/news/business/rss.xml",
+        "enabled": true,
+        "category": "economy",
+        "profile": "hq-economy"
+      },
+      {
+        "name": "CNBC Economy",
+        "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258",
+        "enabled": true,
+        "category": "economy",
+        "profile": "hq-economy"
+      },
+      {
+        "name": "The Guardian Business",
+        "url": "https://www.theguardian.com/business/rss",
+        "enabled": true,
+        "category": "economy",
+        "profile": "hq-economy"
+      },
+      {
+        "name": "TechCrunch",
+        "url": "https://techcrunch.com/feed/",
+        "enabled": true,
+        "category": "tech",
+        "profile": "hq-tech"
+      },
+      {
+        "name": "The Verge",
+        "url": "https://www.theverge.com/rss/index.xml",
+        "enabled": true,
+        "category": "tech",
+        "profile": "hq-tech"
+      },
+      {
+        "name": "Simon Willison",
+        "url": "https://simonwillison.net/atom/everything/",
+        "enabled": true,
+        "category": "tech",
+        "profile": "hq-tech"
+      },
+      {
+        "name": "CNBC Indonesia",
+        "url": "https://www.cnbcindonesia.com/news/rss",
+        "enabled": true,
+        "category": "indonesia",
+        "profile": "hq-economy"
+      },
+      {
+        "name": "Antara English",
+        "url": "https://en.antaranews.com/rss/news.xml",
+        "enabled": true,
+        "category": "indonesia",
+        "profile": "hq-world"
+      },
+      {
+        "name": "Detik Finance",
+        "url": "https://finance.detik.com/rss",
+        "enabled": true,
+        "category": "indonesia",
+        "profile": "hq-economy"
+      }
+    ]
+  },
+  "digest": {
+    "max_items": 24,
+    "group_by": "profile",
+    "profile_order": [
+      "hq-world",
+      "hq-economy",
+      "hq-tech"
+    ]
+  }
+}
