@@ -17,15 +17,15 @@
     "default_profile": "hq-world",
     "profile_settings": {
       "hq-world": {
-        "threshold": 6.5,
+        "threshold": 5.0,
         "topic_dedup": true
       },
       "hq-economy": {
-        "threshold": 6.5,
+        "threshold": 5.0,
         "topic_dedup": true
       },
       "hq-tech": {
-        "threshold": 6.5,
+        "threshold": 5.0,
         "topic_dedup": true
       }
     }
@@ -103,13 +103,6 @@
         "profile": "hq-tech"
       },
       {
-        "name": "CNBC Indonesia",
-        "url": "https://www.cnbcindonesia.com/news/rss",
-        "enabled": true,
-        "category": "indonesia",
-        "profile": "hq-economy"
-      },
-      {
         "name": "Antara English",
         "url": "https://en.antaranews.com/rss/news.xml",
         "enabled": true,
@@ -123,15 +116,50 @@
         "category": "indonesia",
         "profile": "hq-economy"
       }
-    ]
+    ],
+    "google_news": {
+      "enabled": true,
+      "query": "Indonesia economy OR Bali OR Jakarta",
+      "language": "en",
+      "country": "ID",
+      "max_results": 30,
+      "category": "indonesia",
+      "profile": "hq-economy"
+    }
   },
   "digest": {
     "max_items": 24,
-    "group_by": "profile",
-    "profile_order": [
-      "hq-world",
-      "hq-economy",
-      "hq-tech"
-    ]
+    "group_by": "category",
+    "category_groups": {
+      "world": {
+        "name": "World",
+        "limit": 6,
+        "categories": [
+          "world"
+        ]
+      },
+      "economy": {
+        "name": "Economy",
+        "limit": 6,
+        "categories": [
+          "economy"
+        ]
+      },
+      "tech": {
+        "name": "Tech",
+        "limit": 6,
+        "categories": [
+          "tech"
+        ]
+      },
+      "indonesia": {
+        "name": "Indonesia",
+        "limit": 6,
+        "categories": [
+          "indonesia"
+        ]
+      }
+    },
+    "default_group": "world"
   }
 }
