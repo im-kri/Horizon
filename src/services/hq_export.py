@@ -108,3 +108,49 @@ async def export_to_hq(items: List[ContentItem], data_dir: str = "data") -> int:
         n = r.json()
     logger.info("HQ export: %s items upserted", n)
     return int(n or 0)
+
+
+async def report_to_hq(report: Dict[str, Any]) -> None:
+    """Send run diagnostics to HQ (shown as the News agent's status)."""
+    url, anon, token = os.environ.get("HQ_SUPABASE_URL"), os.environ.get("HQ_SUPABASE_ANON"), os.environ.get("HQ_NEWS_TOKEN")
+    if not (url and anon and token):
+        return
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            await client.post(
+                f"{url.rstrip('/')}/rest/v1/rpc/news_report",
+                headers={"apikey": anon, "Authorization": f"Bearer {anon}", "Content-Type": "application/json"},
+                json={"p_token": token, "p_report": report},
+            )
+    except Exception as exc:  # diagnostics must never fail the run
+        logger.warning("HQ report failed: %s", exc)
+
+
+def build_report(all_items, capped_items, analyzed_items, selected_items, fetch_report) -> Dict[str, Any]:
+    def feed(it):
+        return str((it.metadata or {}).get("feed_name") or it.source_type.value)
+    per: Dict[str, Dict[str, Any]] = defaultdict(lambda: {"fetched": 0, "analysed": 0, "failed": 0, "selected": 0, "top": 0.0})
+    for it in all_items:
+        per[feed(it)]["fetched"] += 1
+    for it in analyzed_items:
+        a = it.processing.analysis if it.processing else None
+        if a and a.score is not None:
+            per[feed(it)]["analysed"] += 1
+            per[feed(it)]["top"] = max(per[feed(it)]["top"], float(a.score))
+        else:
+            per[feed(it)]["failed"] += 1
+    for it in selected_items:
+        per[feed(it)]["selected"] += 1
+    errors: Dict[str, str] = {}
+    if fetch_report:
+        for o in fetch_report.outcomes:
+            if o.error:
+                errors[o.source_name] = o.error[:200]
+            for k, v in (o.failures or {}).items():
+                errors[k] = str(v)[:200]
+    analysed_ok = sum(v["analysed"] for v in per.values())
+    return {
+        "fetched": len(all_items), "capped": len(capped_items), "analyzed_ok": analysed_ok,
+        "analyzed_failed": len(analyzed_items) - analysed_ok, "selected": len(selected_items),
+        "feed_errors": len(errors), "errors": errors, "per_feed": per,
+    }

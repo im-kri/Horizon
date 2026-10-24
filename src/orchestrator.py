@@ -325,6 +325,8 @@ class HorizonOrchestrator:
                 from .services.hq_export import export_to_hq
                 sent = await export_to_hq(important_items)
                 self.console.print(f"Sent {sent} items to Fikri HQ\n")
+                from .services.hq_export import build_report, report_to_hq
+                await report_to_hq(build_report(all_items, merged_items, analyzed_items, important_items, self.last_fetch_report))
 
             # 7. Generate and save daily summaries for each configured language
             today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
