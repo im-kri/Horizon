@@ -4,9 +4,11 @@ Writes data/hq-items.json and, when HQ_* env vars are set, upserts the items
 into the HQ Supabase database through the token-protected `ingest_news` RPC.
 """
 
+import asyncio
 import json
 import logging
 import os
+import re
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Dict, List
@@ -65,6 +67,44 @@ def _title(item: ContentItem) -> str:
     return item.title
 
 
+_OG_RE = [
+    re.compile(r'<meta[^>]+property=["\']og:image(?::secure_url)?["\'][^>]+content=["\']([^"\']+)', re.I),
+    re.compile(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', re.I),
+    re.compile(r'<meta[^>]+name=["\']twitter:image["\'][^>]+content=["\']([^"\']+)', re.I),
+]
+
+
+async def _og_image(client: httpx.AsyncClient, url: str) -> str | None:
+    """Fetch a page's preview image (og:image). Best effort, never raises."""
+    try:
+        r = await client.get(url, headers={"User-Agent": "Mozilla/5.0 (compatible; PhysisNews/1.0)"}, follow_redirects=True)
+        if r.status_code >= 400:
+            return None
+        head = r.text[:200_000]
+        for rx in _OG_RE:
+            m = rx.search(head)
+            if m:
+                img = m.group(1).strip().replace("&amp;", "&")
+                if img.startswith("//"):
+                    img = "https:" + img
+                return img if img.startswith("https://") else None
+    except Exception:
+        return None
+    return None
+
+
+async def add_images(payload: List[Dict[str, Any]]) -> None:
+    async with httpx.AsyncClient(timeout=8) as client:
+        sem = asyncio.Semaphore(6)
+
+        async def one(row):
+            async with sem:
+                row["image_url"] = await _og_image(client, row["url"])
+
+        await asyncio.gather(*(one(r) for r in payload))
+    logger.info("HQ images: %s of %s found", sum(1 for r in payload if r.get("image_url")), len(payload))
+
+
 def build_payload(items: List[ContentItem]) -> List[Dict[str, Any]]:
     out = []
     for it in items:
@@ -84,6 +124,7 @@ def build_payload(items: List[ContentItem]) -> List[Dict[str, Any]]:
 
 async def export_to_hq(items: List[ContentItem], data_dir: str = "data") -> int:
     payload = build_payload(items)
+    await add_images(payload)
     try:
         Path(data_dir).mkdir(parents=True, exist_ok=True)
         (Path(data_dir) / "hq-items.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
