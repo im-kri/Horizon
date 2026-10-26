@@ -1,15 +1,25 @@
 {
   "id": "hq-world",
   "name": "World & Indonesia",
-  "display_names": {"zh": "世界与印尼"},
+  "display_names": {
+    "zh": "世界与印尼"
+  },
   "match": "match.md",
   "analysis": "analysis.md",
-  "content": {"analysis_max_chars": 3000, "enrichment_max_chars": 5000, "sampling": "prefix"},
+  "content": {
+    "analysis_max_chars": 3000,
+    "enrichment_max_chars": 5000,
+    "sampling": "prefix"
+  },
   "enrichment": {
     "prompt": "enrichment.md",
     "blocks": [
-      {"id": "summary", "type": "section", "tools": [], "primary": true},
-      {"id": "why", "type": "section", "tools": []}
+      {
+        "id": "summary",
+        "type": "section",
+        "tools": [],
+        "primary": true
+      }
     ]
   }
 }

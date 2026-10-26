@@ -116,7 +116,7 @@ def build_payload(items: List[ContentItem]) -> List[Dict[str, Any]]:
             "section": _section(it),
             "score": analysis.score if analysis and analysis.score is not None else None,
             "summary": _block(it, "summary") or (analysis.summary if analysis else None),
-            "why_it_matters": _block(it, "why") or (analysis.reason if analysis else None),
+            "why_it_matters": None,
             "published_at": it.published_at.isoformat() if it.published_at else None,
         })
     return out
